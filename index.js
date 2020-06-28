@@ -5,6 +5,7 @@ const app = express()
 app.use(express.json()) 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post'))
 
+app.use(express.static('build'))
 
 let persons = [
     {
@@ -92,6 +93,7 @@ morgan.token('post', (req) => {
     return JSON.stringify(req.body)
 })
 
-app.listen(3001, () => {
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
     console.log('server ok')
 })

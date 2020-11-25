@@ -1,6 +1,9 @@
+require('dotenv').config()
+const { response } = require('express')
 const express = require('express')
 var morgan = require('morgan')
 const app = express()
+const Person = require('./models/person')
 
 app.use(express.json()) 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :post'))
@@ -30,8 +33,14 @@ let persons = [
     }
 ]
 
+// app.get('/api/persons', (req, res) => {
+//     res.json(persons)
+// })
+
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}).then(persons => {
+        res.json(persons)
+    })
 })
 
 app.get('/info', (req, res) => {
@@ -58,30 +67,37 @@ app.delete('/api/persons/:id', (req, res) => {
 })
 
 app.post('/api/persons', (req, res) => {
-    const randId = Math.floor(Math.random() * 100000)
+    // const randId = Math.floor(Math.random() * 100000)
     const body = req.body
 
-    if (!body.name || !body.number) {
-        return res.status(400).json({
-             error: 'name or number is missing' 
-        })
+    // if (!body.name || !body.number) {
+    //     return res.status(400).json({
+    //          error: 'name or number is missing' 
+    //     })
+    // }
+
+    // if (persons.find(person => person.name === body.name)) {
+    //     return res.status(400).json({
+    //         error: 'name must be unique' 
+    //    })
+    // }
+
+    if (body.name === undefined) {
+        return res.status(400).json({ error: 'name missing' })
     }
 
-    if (persons.find(person => person.name === body.name)) {
-        return res.status(400).json({
-            error: 'name must be unique' 
-       })
-    }
-
-    const person = {
+    const person = new Person({
         name: body.name,
         number: body.number,
-        id: randId
-    }
+        //id: randId
+    })
 
-    persons = persons.concat(person)
+    person.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
 
-    res.json(person)
+    // persons = persons.concat(person)
+    // res.json(person)
 })
 
 morgan.token('post', (req) => {
@@ -93,7 +109,7 @@ morgan.token('post', (req) => {
     return JSON.stringify(req.body)
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log('server ok')
 })
